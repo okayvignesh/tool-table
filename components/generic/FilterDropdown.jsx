@@ -9,6 +9,7 @@ const FilterDropdown = ({
 	childKey,
 }) => {
 	const [selectAll, setSelectAll] = useState(true);
+	console.log(items)
 
 	const handleCheckboxChange = (item) => {
 		changeState((prev) => {

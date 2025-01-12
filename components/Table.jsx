@@ -22,7 +22,6 @@ function Table() {
 		}))
 	);
 	const [newState, setNewState] = useState({
-		name: '',
 		population: '',
 		area_sq_km: '',
 		capital: '',
@@ -31,6 +30,7 @@ function Table() {
 	const [search, setSearch] = useState('');
 	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [selectedCountry, setSelectedCountry] = useState(null);
+	const [selectedState, setSelectedState] = useState(null);
 
 	const toggleExpand = (index) => {
 		setCountries((prevCountries) =>
@@ -99,7 +99,7 @@ function Table() {
 	};
 
 	const handleAddState = () => {
-		if (selectedCountry && newState.name) {
+		if (selectedCountry && selectedState) {
 			setCountries((prevCountries) =>
 				prevCountries.map((country) =>
 					country.name === selectedCountry
@@ -108,12 +108,12 @@ function Table() {
 								states: [
 									...country.states,
 									{
-										name: newState.name,
+										name: selectedState,
 										population: parseFloat(newState.population) || 0,
 										area_sq_km: parseFloat(newState.area_sq_km) || 0,
 										capital: newState.capital,
 										hdi: newState.hdi,
-										show: true
+										show: true,
 									},
 								],
 						  }
@@ -121,16 +121,20 @@ function Table() {
 				)
 			);
 			setNewState({
-				name: '',
 				population: '',
 				area_sq_km: '',
 				capital: '',
 				hdi: '',
 			});
+			setSelectedState(null);
 			alert('State added successfully!');
 		} else {
 			alert('Please fill in all fields and select a country.');
 		}
+	};
+
+	const handleStateSelect = (e) => {
+		setSelectedState(e.target.value);
 	};
 
 	return (
@@ -161,8 +165,26 @@ function Table() {
 									Country
 									<FilterDropdown
 										items={countries}
-										hasChildren={true}
-										childKey={'states'}
+										changeState={setCountries}
+										property={'name'}
+									/>
+								</div>
+							</th>
+							<th>
+								<div className="d-flex align-items-center justify-content-between">
+									Country ID
+									<FilterDropdown
+										items={countries}
+										changeState={setCountries}
+										property={'country_id'}
+									/>
+								</div>
+							</th>
+							<th>
+								<div className="d-flex align-items-center justify-content-between">
+									State
+									<FilterDropdown
+										items={countries.map((country) => country.states).flat()}
 										changeState={setCountries}
 										property={'name'}
 									/>
@@ -172,7 +194,7 @@ function Table() {
 								<div className="d-flex align-items-center justify-content-between">
 									Population
 									<FilterDropdown
-										items={countries}
+										items={countries.map((country) => country.states).flat()}
 										changeState={setCountries}
 										property={'population'}
 									/>
@@ -182,7 +204,7 @@ function Table() {
 								<div className="d-flex align-items-center justify-content-between">
 									Area
 									<FilterDropdown
-										items={countries}
+										items={countries.map((country) => country.states).flat()}
 										changeState={setCountries}
 										property={'area_sq_km'}
 									/>
@@ -202,7 +224,7 @@ function Table() {
 								<div className="d-flex align-items-center justify-content-between">
 									Capital
 									<FilterDropdown
-										items={countries}
+										items={countries.map((country) => country.states).flat()}
 										changeState={setCountries}
 										property={'capital'}
 									/>
@@ -212,7 +234,7 @@ function Table() {
 								<div className="d-flex align-items-center justify-content-between">
 									HDI
 									<FilterDropdown
-										items={countries}
+										items={countries.map((country) => country.states).flat()}
 										changeState={setCountries}
 										property={'hdi'}
 									/>
@@ -221,58 +243,70 @@ function Table() {
 						</tr>
 					</thead>
 					<tbody>
-						{countries
-							.filter((country) => country.show)
-							.map((country, index) => (
-								<>
-									<tr>
-										<td>{index + 1}</td>
-										<td>
-											<button
-												className="actionbtn"
-												data-bs-toggle="modal"
-												data-bs-target="#actionModal"
-												onClick={() => setSelectedCountry(country.name)}>
-												<IoMdAdd size={20} />
-											</button>
-										</td>
-										<td>
-											<button
-												onClick={() => toggleExpand(index)}
-												className="no-border-img">
-												{country.expanded ? (
-													<MdKeyboardArrowDown size={20} />
-												) : (
-													<MdKeyboardArrowRight size={20} />
-												)}
-											</button>
-											<span style={{ padding: '5px' }}>{country.name}</span>
-										</td>
-										<td>{country.population} M</td>
-										<td>{country.area_sq_km} sq km</td>
-										<td>{country.currency}</td>
-										<td>{country.capital}</td>
-										<td>{country.hdi}</td>
-									</tr>
-									{country.expanded &&
-										country.states
-											.filter((state) => state.show)
-											.map((state, stateIndex) => (
-												<tr
-													key={`${country.name}-${state.name}-${stateIndex}`}
-													className="sub-tr">
-													<td></td>
-													<td></td>
-													<td>{state.name}</td>
-													<td>{state.population} M</td>
-													<td>{state.area_sq_km} sq km</td>
-													<td>{country.currency}</td>
-													<td>{state.capital}</td>
-													<td>{state.hdi}</td>
-												</tr>
-											))}
-								</>
-							))}
+						{countries ? (
+							countries.filter((country) => country.show).length > 0 ? (
+								countries
+									.filter((country) => country.show)
+									.map((country, index) => (
+										<>
+											<tr>
+												<td>{index + 1}</td>
+												<td>
+													<button
+														className="actionbtn"
+														data-bs-toggle="modal"
+														data-bs-target="#actionModal"
+														onClick={() => setSelectedCountry(country.name)}>
+														<IoMdAdd size={20} />
+													</button>
+												</td>
+												<td>
+													<button
+														onClick={() => toggleExpand(index)}
+														className="no-border-img">
+														{country.expanded ? (
+															<MdKeyboardArrowDown size={20} />
+														) : (
+															<MdKeyboardArrowRight size={20} />
+														)}
+													</button>
+													<span style={{ padding: '5px' }}>{country.name}</span>
+												</td>
+												<td>{country.country_id}</td>
+												<td></td>
+												<td>{country.population} M</td>
+												<td>{country.area_sq_km} sq km</td>
+												<td>{country.currency}</td>
+												<td>{country.capital}</td>
+												<td>{country.hdi}</td>
+											</tr>
+											{country.expanded &&
+												country.states
+													.filter((state) => state.show)
+													.map((state, stateIndex) => (
+														<tr
+															key={`${country.name}-${state.name}-${stateIndex}`}
+															className="sub-tr">
+															<td></td>
+															<td></td>
+															<td></td>
+															<td></td>
+															<td>{state.name}</td>
+															<td>{state.population} M</td>
+															<td>{state.area_sq_km} sq km</td>
+															<td>{country.currency}</td>
+															<td>{state.capital}</td>
+															<td>{state.hdi}</td>
+														</tr>
+													))}
+										</>
+									))
+							) : (
+								<p className="text-center py-3">No filter selected</p>
+							)
+						) : (
+							<p>No records found</p>
+						)}
 					</tbody>
 				</table>
 			</div>
@@ -293,15 +327,20 @@ function Table() {
 								</option>
 							))}
 						</select>
-						<input
-							type="text"
-							className="input-txt"
-							placeholder="State Name"
-							name="name"
-							required
-							value={newState.name}
-							onChange={handleStateInputChange}
-						/>
+						<select
+							className="form-select form-select-sm"
+							value={selectedState}
+							onChange={handleStateSelect}>
+							<option value="">Select State</option>
+							{selectedCountry &&
+								stateForCountries
+									.find((country) => country.country_name === selectedCountry)
+									?.states.map((state, index) => (
+										<option value={state} key={index}>
+											{state}
+										</option>
+									))}
+						</select>
 						<input
 							type="text"
 							className="input-txt"
